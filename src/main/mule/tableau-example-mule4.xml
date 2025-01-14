@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:tableau-specialist="http://www.mulesoft.org/schema/mule/tableau-specialist"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/tableau-specialist http://www.mulesoft.org/schema/mule/tableau-specialist/current/mule-tableau-specialist.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<tableau-specialist:tableau-hyper-config name="Tableau_Specialist_Hyper_configuration" doc:name="Tableau Specialist Hyper configuration" doc:id="bfb6b5d3-ae0b-4e46-907d-adba6b4cf87b" >
+		<tableau-specialist:connection workingDir="#[p('project.home') ++ &quot;/src/main/resources&quot;]" hyperdDir="#[p('project.home') ++ &quot;/src/main/resources/lib/hyper&quot;]" />
+	</tableau-specialist:tableau-hyper-config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="74c8c199-14b9-4db9-a414-0c4205f7baa8" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="9605ae0c-6e46-490a-9e7c-6b92cf9b7e85" file="mule-properties.yaml" />
+	<flow name="tableau-example-mule4Flow1" doc:id="042c7fa3-41d1-4107-a01a-fe52145ddeb1" >
+		<http:listener doc:name="/query" doc:id="9c4f900e-eaed-488f-a4e7-3acae278739d" config-ref="HTTP_Listener_config" path="/query"/>
+		<tableau-specialist:query-data-from-hyper-file doc:name="Query data from hyper file" doc:id="b826cd8b-4239-42d9-a26c-0e612b70d490" config-ref="Tableau_Specialist_Hyper_configuration" hyperFileName="test.hyper">
+			<tableau-specialist:query ><![CDATA[select * from mule.test]]></tableau-specialist:query>
+		</tableau-specialist:query-data-from-hyper-file>
+		<ee:transform doc:name="Transform Message" doc:id="945d86eb-d827-4876-9b76-fe35c31ec677" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="tableau-example-mule4Flow" doc:id="ca0dd68d-af95-4dfe-a0df-fec561c8a5f9" >
+		<http:listener doc:name="/loaddata" doc:id="dd3211f4-bf16-410a-b402-6474a77f3e7f" config-ref="HTTP_Listener_config" path="/loaddata"/>
+		<tableau-specialist:create-hyper-file doc:name="Create hyper file" doc:id="9a67cacc-f4a8-4d12-942d-71d185f86d37" config-ref="Tableau_Specialist_Hyper_configuration" hyperFileName="test.hyper" schemaName="mule" tableName="test">
+			<tableau-specialist:columns >
+				<tableau-specialist:column-definition columnName="firstName" columnType="VARCHAR" columnNullability="NULLABLE" length="20"/>
+				<tableau-specialist:column-definition columnName="lastName" columnType="VARCHAR" columnNullability="NULLABLE" length="20"/>
+			</tableau-specialist:columns>
+		</tableau-specialist:create-hyper-file>
+		<logger level="INFO" doc:name="Logger" doc:id="24aab41b-4675-427d-9507-891e039ca7d0" />
+		<tableau-specialist:insert-data-to-hyper-file doc:name="Insert data to hyper file" doc:id="50974783-bdbc-4a0b-957b-048cdbefb3e4" config-ref="Tableau_Specialist_Hyper_configuration" hyperFileName="test.hyper">
+			<tableau-specialist:insert-command ><![CDATA[insert into mule.test values('bob','smith')]]></tableau-specialist:insert-command>
+		</tableau-specialist:insert-data-to-hyper-file>
+		<ee:transform doc:name="Transform Message" doc:id="a75893cf-51f4-4200-ab71-162c68e19ada" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
