@@ -27,19 +27,39 @@ payload]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
 	</flow>
-	<flow name="tableau-example-mule4Flow" doc:id="ca0dd68d-af95-4dfe-a0df-fec561c8a5f9" >
-		<http:listener doc:name="/loaddata" doc:id="dd3211f4-bf16-410a-b402-6474a77f3e7f" config-ref="HTTP_Listener_config" path="/loaddata"/>
+	<flow name="tableau-example-mule4Flow" doc:id="ca0dd68d-af95-4dfe-a0df-fec561c8a5f9">
+		<http:listener doc:name="/loaddata" doc:id="dd3211f4-bf16-410a-b402-6474a77f3e7f" config-ref="HTTP_Listener_config" path="/loaddata" />
 		<tableau-specialist:create-hyper-file doc:name="Create hyper file" doc:id="9a67cacc-f4a8-4d12-942d-71d185f86d37" config-ref="Tableau_Specialist_Hyper_configuration" hyperFileName="test.hyper" schemaName="mule" tableName="test">
-			<tableau-specialist:columns >
-				<tableau-specialist:column-definition columnName="firstName" columnType="VARCHAR" columnNullability="NULLABLE" length="20"/>
-				<tableau-specialist:column-definition columnName="lastName" columnType="VARCHAR" columnNullability="NULLABLE" length="20"/>
+			<tableau-specialist:columns>
+				<tableau-specialist:column-definition columnName="firstName" columnType="VARCHAR" columnNullability="NULLABLE" length="20" />
+				<tableau-specialist:column-definition columnName="lastName" columnType="VARCHAR" columnNullability="NULLABLE" length="20" />
 			</tableau-specialist:columns>
 		</tableau-specialist:create-hyper-file>
 		<logger level="INFO" doc:name="Logger" doc:id="24aab41b-4675-427d-9507-891e039ca7d0" />
 		<tableau-specialist:insert-data-to-hyper-file doc:name="Insert data to hyper file" doc:id="50974783-bdbc-4a0b-957b-048cdbefb3e4" config-ref="Tableau_Specialist_Hyper_configuration" hyperFileName="test.hyper">
-			<tableau-specialist:insert-command ><![CDATA[insert into mule.test values('bob','smith')]]></tableau-specialist:insert-command>
+			<tableau-specialist:insert-command><![CDATA[insert into mule.test values('bob','smith')]]></tableau-specialist:insert-command>
 		</tableau-specialist:insert-data-to-hyper-file>
-		<ee:transform doc:name="Transform Message" doc:id="a75893cf-51f4-4200-ab71-162c68e19ada" >
+		<ee:transform doc:name="Transform Message" doc:id="a75893cf-51f4-4200-ab71-162c68e19ada">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="tableau-example-mule4Flow2" doc:id="fac56013-e7fc-4c16-8184-b14226edd838" >
+		<http:listener doc:name="/loadcsv" doc:id="d81de44a-a31e-4089-b17e-2c84589bb4e6" config-ref="HTTP_Listener_config" path="/loadcsv"/>
+		<tableau-specialist:insert-data-to-hyper-file-from-csv doc:name="Insert data to hyper file from csv" doc:id="d7f6a6e4-5be2-43a6-b369-2ce53bf4e403" hyperFileName="test_csv.hyper" schemaName="mule" tableName="test" config-ref="Tableau_Specialist_Hyper_configuration" csvDelimiter="," csvFilePath="#[p('project.home') ++ &quot;/src/main/resources/customer.csv&quot;]" csvNullColumn="null">
+			<tableau-specialist:columns >
+				<tableau-specialist:column-definition columnName="id" columnType="INT" columnNullability="NOT_NULLABLE" />
+				<tableau-specialist:column-definition columnName="first_name" columnType="VARCHAR" columnNullability="NULLABLE" length="20"/>
+				<tableau-specialist:column-definition columnName="last_name" columnType="VARCHAR" columnNullability="NULLABLE" length="20"/>
+				<tableau-specialist:column-definition columnName="email" columnType="VARCHAR" columnNullability="NULLABLE" length="50"/>
+				<tableau-specialist:column-definition columnName="phone" columnType="VARCHAR" columnNullability="NULLABLE" length="30"/>
+			</tableau-specialist:columns>
+		</tableau-specialist:insert-data-to-hyper-file-from-csv>
+		<ee:transform doc:name="Transform Message" doc:id="2f402dea-4756-4a55-8bfc-4e03682df729" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
